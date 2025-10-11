@@ -18,29 +18,62 @@ export type Database = {
         Row: {
           created_at: string
           cross_offs_count: number
+          discord_username: string | null
           id: string
+          interests: string | null
           keeps_count: number
           nickname: string
+          photo_url: string | null
           tagline: string
           useless_trait: string
+          user_id: string | null
+          why_not_want: string | null
         }
         Insert: {
           created_at?: string
           cross_offs_count?: number
+          discord_username?: string | null
           id?: string
+          interests?: string | null
           keeps_count?: number
           nickname: string
+          photo_url?: string | null
           tagline: string
           useless_trait: string
+          user_id?: string | null
+          why_not_want?: string | null
         }
         Update: {
           created_at?: string
           cross_offs_count?: number
+          discord_username?: string | null
           id?: string
+          interests?: string | null
           keeps_count?: number
           nickname?: string
+          photo_url?: string | null
           tagline?: string
           useless_trait?: string
+          user_id?: string | null
+          why_not_want?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          username?: string
         }
         Relationships: []
       }
@@ -49,7 +82,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      vote_on_friend: {
+        Args: { friend_id: string; vote_type: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

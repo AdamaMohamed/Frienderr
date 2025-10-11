@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, X } from "lucide-react";
+import { Heart, X, User } from "lucide-react";
 
 interface SwipeCardProps {
   friend: {
@@ -10,6 +10,10 @@ interface SwipeCardProps {
     tagline: string;
     keeps_count: number;
     cross_offs_count: number;
+    photo_url?: string;
+    discord_username?: string;
+    interests?: string;
+    why_not_want?: string;
   };
   onSwipe: (friendId: string, isKeep: boolean) => void;
   disabled?: boolean;
@@ -55,7 +59,7 @@ const SwipeCard = ({ friend, onSwipe, disabled }: SwipeCardProps) => {
 
   return (
     <Card
-      className="relative w-full h-[500px] cursor-grab active:cursor-grabbing shadow-2xl border-4 border-primary/20 bg-card overflow-hidden select-none touch-none"
+      className="relative w-full min-h-[550px] cursor-grab active:cursor-grabbing shadow-2xl border-4 border-primary/20 bg-card overflow-hidden select-none touch-none"
       style={{
         transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${rotation}deg)`,
         opacity,
@@ -75,7 +79,6 @@ const SwipeCard = ({ friend, onSwipe, disabled }: SwipeCardProps) => {
       }}
       onTouchEnd={handleDragEnd}
     >
-      {/* Swipe indicators */}
       {isDragging && (
         <>
           <div
@@ -100,40 +103,80 @@ const SwipeCard = ({ friend, onSwipe, disabled }: SwipeCardProps) => {
       )}
 
       <CardContent className="p-8 h-full flex flex-col justify-between">
-        {/* Nickname */}
         <div>
-          <h2 className="text-5xl font-bold text-center mb-4 text-foreground">
+          {friend.photo_url ? (
+            <div className="flex justify-center mb-4">
+              <img
+                src={friend.photo_url}
+                alt={friend.nickname}
+                className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
+              />
+            </div>
+          ) : (
+            <div className="flex justify-center mb-4">
+              <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-4 border-primary/20">
+                <User className="w-16 h-16 text-muted-foreground" />
+              </div>
+            </div>
+          )}
+          
+          <h2 className="text-4xl font-bold text-center mb-2 text-foreground">
             {friend.nickname}
           </h2>
+          {friend.discord_username && (
+            <p className="text-sm text-center text-muted-foreground mb-4">
+              Discord: {friend.discord_username}
+            </p>
+          )}
           <div className="h-1 w-20 bg-primary mx-auto rounded-full mb-6" />
         </div>
 
-        {/* Traits */}
-        <div className="space-y-6 flex-1 flex flex-col justify-center">
-          <div className="bg-muted/50 p-6 rounded-2xl">
-            <p className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+        <div className="space-y-4 flex-1 flex flex-col justify-center">
+          <div className="bg-muted/50 p-4 rounded-xl">
+            <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">
               Useless Trait
             </p>
-            <p className="text-2xl font-semibold text-foreground">
+            <p className="text-lg font-semibold text-foreground">
               {friend.useless_trait}
             </p>
           </div>
 
-          <div className="bg-primary/10 p-6 rounded-2xl border-2 border-primary/20">
-            <p className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+          {friend.interests && (
+            <div className="bg-accent/10 p-4 rounded-xl border-2 border-accent/20">
+              <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">
+                Interests
+              </p>
+              <p className="text-base text-foreground">
+                {friend.interests}
+              </p>
+            </div>
+          )}
+
+          <div className="bg-primary/10 p-4 rounded-xl border-2 border-primary/20">
+            <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">
               About Them
             </p>
-            <p className="text-xl italic text-foreground">
+            <p className="text-base italic text-foreground">
               "{friend.tagline}"
             </p>
           </div>
+
+          {friend.why_not_want && (
+            <div className="bg-destructive/10 p-4 rounded-xl border-2 border-destructive/20">
+              <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">
+                The Issue
+              </p>
+              <p className="text-base text-foreground">
+                {friend.why_not_want}
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Stats */}
-        <div className="mt-6">
+        <div className="mt-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-semibold text-muted-foreground">Popularity Score</span>
-            <span className="text-lg font-bold text-foreground">{keepPercentage}% Keep Rate</span>
+            <span className="text-sm font-semibold text-muted-foreground">Popularity</span>
+            <span className="text-base font-bold text-foreground">{keepPercentage}% Keep Rate</span>
           </div>
           <div className="flex gap-4 text-center">
             <div className="flex-1 bg-success/20 p-3 rounded-xl border-2 border-success/30">

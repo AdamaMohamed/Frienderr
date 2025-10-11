@@ -13,6 +13,10 @@ interface Friend {
   tagline: string;
   keeps_count: number;
   cross_offs_count: number;
+  photo_url?: string;
+  discord_username?: string;
+  interests?: string;
+  why_not_want?: string;
 }
 
 const Swipe = () => {
@@ -38,7 +42,7 @@ const Swipe = () => {
       setFriends(data || []);
     } catch (error) {
       console.error("Error fetching friends:", error);
-      toast.error("Couldn't load friends 😢");
+      toast.error("Couldn't load friends");
     } finally {
       setLoading(false);
     }
@@ -48,29 +52,27 @@ const Swipe = () => {
     if (swiping) return;
     setSwiping(true);
 
-    const column = isKeep ? "keeps_count" : "cross_offs_count";
-    const currentFriend = friends[currentIndex];
+    const voteType = isKeep ? "keep" : "cross";
 
     try {
-      const { error } = await supabase
-        .from("friends")
-        .update({ [column]: currentFriend[column] + 1 })
-        .eq("id", friendId);
+      const { error } = await supabase.rpc("vote_on_friend", {
+        friend_id: friendId,
+        vote_type: voteType,
+      });
 
       if (error) throw error;
 
-      toast.success(isKeep ? "Kept! ❤️" : "Crossed off! ✖️", {
+      toast.success(isKeep ? "Kept" : "Crossed off", {
         duration: 1000,
       });
 
-      // Move to next card after animation
       setTimeout(() => {
         setCurrentIndex((prev) => prev + 1);
         setSwiping(false);
       }, 500);
     } catch (error) {
       console.error("Error voting:", error);
-      toast.error("Vote failed 😅");
+      toast.error("Vote failed");
       setSwiping(false);
     }
   };
@@ -78,7 +80,7 @@ const Swipe = () => {
   const resetStack = () => {
     setCurrentIndex(0);
     fetchFriends();
-    toast.success("Stack refreshed! 🔄");
+    toast.success("Stack refreshed");
   };
 
   if (loading) {
@@ -128,9 +130,8 @@ const Swipe = () => {
           </div>
         ) : (
           <div className="text-center bounce-in">
-            <div className="text-8xl mb-6">🎉</div>
             <h2 className="text-4xl font-bold text-white mb-4">
-              That's Everyone!
+              That's Everyone
             </h2>
             <p className="text-xl text-white/80 mb-8">
               You've swiped through all the friends
