@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Post from "./pages/Post";
 import Swipe from "./pages/Swipe";
 import Browse from "./pages/Browse";
+import Matches from "./pages/Matches";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -25,8 +26,9 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/post" element={<Post />} />
             <Route path="/swipe" element={<Swipe />} />
-            <Route path="/browse" element={<Browse />} />
-            <Route path="*" element={<NotFound />} />
+          <Route path="/browse" element={<Browse />} />
+          <Route path="/matches" element={<Matches />} />
+          <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

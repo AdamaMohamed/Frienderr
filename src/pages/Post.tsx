@@ -21,8 +21,9 @@ const Post = () => {
     useless_trait: "",
     tagline: "",
     discord_username: "",
-    interests: "",
+    interests: [] as string[],
     why_not_want: "",
+    sex: "",
   });
 
   useEffect(() => {
@@ -48,7 +49,7 @@ const Post = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.nickname || !formData.useless_trait || !formData.tagline) {
+    if (!formData.nickname || !formData.useless_trait || !formData.tagline || !formData.sex) {
       toast.error("Fill in the required fields");
       return;
     }
@@ -77,7 +78,13 @@ const Post = () => {
       const { error } = await supabase
         .from("friends")
         .insert([{
-          ...formData,
+          nickname: formData.nickname,
+          useless_trait: formData.useless_trait,
+          tagline: formData.tagline,
+          discord_username: formData.discord_username,
+          interests: formData.interests.join(", "),
+          why_not_want: formData.why_not_want,
+          sex: formData.sex,
           photo_url: photoUrl,
           user_id: user.id,
         }]);
@@ -192,28 +199,66 @@ const Post = () => {
                 <Label htmlFor="useless_trait" className="text-base font-semibold">
                   Most Useless Trait *
                 </Label>
-                <Input
+                <select
                   id="useless_trait"
-                  placeholder="Can recite every Star Wars quote"
                   value={formData.useless_trait}
                   onChange={(e) => setFormData({ ...formData, useless_trait: e.target.value })}
-                  className="h-11 rounded-xl border-2 focus:border-primary"
-                  maxLength={100}
-                />
+                  className="w-full h-11 rounded-xl border-2 border-input bg-background px-3 py-2 focus:border-primary focus:outline-none"
+                  required
+                >
+                  <option value="">Select a trait</option>
+                  <option value="Can recite every Star Wars quote">Can recite every Star Wars quote</option>
+                  <option value="Always late to everything">Always late to everything</option>
+                  <option value="Obsessed with zodiac signs">Obsessed with zodiac signs</option>
+                  <option value="Corrects grammar constantly">Corrects grammar constantly</option>
+                  <option value="Talks in movie quotes">Talks in movie quotes</option>
+                  <option value="Never stops talking about crypto">Never stops talking about crypto</option>
+                  <option value="Makes everything a competition">Makes everything a competition</option>
+                  <option value="Posts food pics every meal">Posts food pics every meal</option>
+                </select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="interests" className="text-base font-semibold">
-                  Interests
+                <Label htmlFor="sex" className="text-base font-semibold">
+                  Gender *
                 </Label>
-                <Input
-                  id="interests"
-                  placeholder="Gaming, anime, coffee"
-                  value={formData.interests}
-                  onChange={(e) => setFormData({ ...formData, interests: e.target.value })}
-                  className="h-11 rounded-xl border-2 focus:border-primary"
-                  maxLength={100}
-                />
+                <select
+                  id="sex"
+                  value={formData.sex}
+                  onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+                  className="w-full h-11 rounded-xl border-2 border-input bg-background px-3 py-2 focus:border-primary focus:outline-none"
+                  required
+                >
+                  <option value="">Select gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">
+                  Interests (Select all that apply)
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["Gaming", "Anime", "Movies", "Music", "Sports", "Reading", "Coding", "Art", "Travel", "Food"].map((interest) => (
+                    <label key={interest} className="flex items-center gap-2 p-2 rounded-lg border-2 border-input hover:border-primary cursor-pointer transition-colors bg-background">
+                      <input
+                        type="checkbox"
+                        checked={formData.interests.includes(interest)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({ ...formData, interests: [...formData.interests, interest] });
+                          } else {
+                            setFormData({ ...formData, interests: formData.interests.filter(i => i !== interest) });
+                          }
+                        }}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <span className="text-sm">{interest}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2">

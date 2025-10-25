@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Heart, X, RotateCcw } from "lucide-react";
+import { ArrowLeft, Heart, X, RotateCcw, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SwipeCard from "@/components/SwipeCard";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Friend {
   id: string;
@@ -17,17 +18,32 @@ interface Friend {
   discord_username?: string;
   interests?: string;
   why_not_want?: string;
+  sex?: string;
+  user_id?: string;
 }
 
 const Swipe = () => {
   const navigate = useNavigate();
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [allFriends, setAllFriends] = useState<Friend[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [swiping, setSwiping] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    sex: "",
+    interests: [] as string[],
+  });
+  
+  const swipeRightSound = useRef<HTMLAudioElement | null>(null);
+  const swipeLeftSound = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     fetchFriends();
+    
+    // Create audio elements for swipe sounds
+    swipeRightSound.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBDGJ0fPTgjMGHWy58OGeUhELTKXh8blrGwU+ltby0H8pBSl+zPLaizsIGGS+7+OhTBAMVKzn8bllGgdBntzy0IMnBSh6y/HajDoIHG/A7+KdTxALTqPh8bRsFgU3k9Xz1IAqBSZ7yfHdizsIGG/A7+GdTxALT6Xh8bVtGQdCntzy0YMmBSh6y/HdjDoIHXDA7+KeTxALT6Xh8bNsFgU3k9XzyoAqBSZ7yfHdizsIGG/A7+GdTxALTqTh8bRtGQdBntzy0YMmBSh6y/HdjDoIHXDA7+OeTxALTqPh8bRsFgU3k9XzyoAqBSZ7yfHdizsIGW/A7+CdTxALT6Xh8bNsGQdBntzy0YMmBSh6y/HdjDoIHXDA7+OeTxALTqTh8bVsFgU2k9XzyoAqBSZ7yfHdizsIGW/A7+CdTxALUKXh8bJsGQdBntzy0YMmBSh6y/HdjToIHXDA7+SdTxALTqTh8bVsFQU3k9XzyoAqBSZ7yfHdizsIGW/A7+CdTxALUKXh8bJsGAdBntzy04MmBSh6y/HdjToIHXHA7+SdThALTqTh8bVsFQU3k9XzyoAqBCZ7yfHdizsIGW/B7+CdTxALUKXh8bJsGAdBntzy04MlBSh6y/HdjToIHXHA7+SdThALTqTh8bVsFQU3k9XzyoAqBCZ8yfHdizsIGW/B7+CdTxALT6Xh8bJsGAdBntzx04MlBSh6y/HdjToIHXHA7+SdThALT6Th8bVsFQU3k9XzyoAqBCZ8yfHdizsIGW/B7+CdTxALT6Xh8bFsGAdBntzx04MlBSh6y/HdjToIHXHA7+SdThALT6Th8bVsFQU3k9XzyoAqBCZ8yfHdizsIGW/B7+CdTxALT6Xh8bFsGAdBntzx04MlBSh6y/HdjToIHXHA7+SdThALT6Th8bVsFQU3k9XzyoAqBCZ8yfHdizsIGW/B7+CdTxALT6Xh8bFsGAdBntzx04MlBSh6y/HdjToIHXHA7+SdThALT6Th8bVsFQU3k9XzyoAqBCZ8yfHdizsIGW/B7+CdTxALT6Xh8bFsGAdBntzx04MlBSh6y/HdjToIHXHA7+SdThALT6Th8bVsFQU3k9XzyoAqBCZ8yfHdizsIGW/B7+CdTxALT6Xh8Q==');
+    swipeLeftSound.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYiFbF1fdZivq5BgNjVfodDcqmEcBD+a3PLDcSQGLIHO8tiJNggZZ7zs559NEwxPpuPvt2McBziQ1/HNfCwEJHfH8d+RQAoUXrTq7KlVFgpFnuDyvW4gBTKI0fPTgjMFHWy68OGeUhEKS6Th8rxqGgU+ldby0H8pBil+zPLaiz0IGmS+7+OhTRALVKzl8LlmGgZBndz00oMnBSh6y/LajDoIHW/A7+KdTxALTqPi8bRsFgY3k9Xzz4AqBiZ7yvHdjDsIGG/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThALTqTh8rRsFgY3k9Xzz4AqBiZ7yvHdjDsIGW/A8OGdThA=');
   }, []);
 
   const fetchFriends = async () => {
@@ -39,7 +55,8 @@ const Swipe = () => {
 
       if (error) throw error;
 
-      setFriends(data || []);
+      setAllFriends(data || []);
+      applyFilters(data || []);
     } catch (error) {
       console.error("Error fetching friends:", error);
       toast.error("Couldn't load friends");
@@ -48,9 +65,40 @@ const Swipe = () => {
     }
   };
 
+  const applyFilters = (friendsList: Friend[]) => {
+    let filtered = friendsList;
+
+    if (filters.sex) {
+      filtered = filtered.filter(f => f.sex === filters.sex);
+    }
+
+    if (filters.interests.length > 0) {
+      filtered = filtered.filter(f => {
+        if (!f.interests) return false;
+        return filters.interests.some(interest => 
+          f.interests?.toLowerCase().includes(interest.toLowerCase())
+        );
+      });
+    }
+
+    setFriends(filtered);
+    setCurrentIndex(0);
+  };
+
+  useEffect(() => {
+    applyFilters(allFriends);
+  }, [filters]);
+
   const handleVote = async (friendId: string, isKeep: boolean) => {
     if (swiping) return;
     setSwiping(true);
+
+    // Play sound
+    if (isKeep && swipeRightSound.current) {
+      swipeRightSound.current.play().catch(() => {});
+    } else if (!isKeep && swipeLeftSound.current) {
+      swipeLeftSound.current.play().catch(() => {});
+    }
 
     const voteType = isKeep ? "keep" : "cross";
 
@@ -79,6 +127,7 @@ const Swipe = () => {
 
   const resetStack = () => {
     setCurrentIndex(0);
+    setFilters({ sex: "", interests: [] });
     fetchFriends();
     toast.success("Stack refreshed");
   };
@@ -106,8 +155,18 @@ const Swipe = () => {
           <ArrowLeft className="mr-2 w-4 h-4" />
           Home
         </Button>
-        <div className="text-white font-bold text-lg">
-          {currentIndex + 1} / {friends.length}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => setShowFilters(!showFilters)}
+            className="text-white hover:bg-white/10"
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filters
+          </Button>
+          <div className="text-white font-bold text-lg">
+            {currentIndex + 1} / {friends.length}
+          </div>
         </div>
         <Button
           variant="ghost"
@@ -117,6 +176,60 @@ const Swipe = () => {
           <RotateCcw className="w-4 h-4" />
         </Button>
       </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="px-6 pb-4">
+          <Card className="bg-card/95 backdrop-blur">
+            <CardContent className="p-4 space-y-4">
+              <div>
+                <label className="text-sm font-semibold mb-2 block">Gender</label>
+                <select
+                  value={filters.sex}
+                  onChange={(e) => setFilters({ ...filters, sex: e.target.value })}
+                  className="w-full h-10 rounded-lg border-2 border-input bg-background px-3 focus:border-primary focus:outline-none"
+                >
+                  <option value="">All</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold mb-2 block">Interests</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["Gaming", "Anime", "Movies", "Music", "Sports"].map((interest) => (
+                    <label key={interest} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={filters.interests.includes(interest)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFilters({ ...filters, interests: [...filters.interests, interest] });
+                          } else {
+                            setFilters({ ...filters, interests: filters.interests.filter(i => i !== interest) });
+                          }
+                        }}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      {interest}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                onClick={() => setFilters({ sex: "", interests: [] })}
+                variant="outline"
+                className="w-full"
+              >
+                Clear Filters
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Card Stack */}
       <div className="flex-1 flex items-center justify-center p-6">

@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, X, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SwipeCardProps {
   friend: {
@@ -14,15 +16,38 @@ interface SwipeCardProps {
     discord_username?: string;
     interests?: string;
     why_not_want?: string;
+    sex?: string;
+    user_id?: string;
   };
   onSwipe: (friendId: string, isKeep: boolean) => void;
   disabled?: boolean;
 }
 
 const SwipeCard = ({ friend, onSwipe, disabled }: SwipeCardProps) => {
+  const { user } = useAuth();
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [showDiscord, setShowDiscord] = useState(false);
+
+  useEffect(() => {
+    checkMutualMatch();
+  }, [friend.id, user]);
+
+  const checkMutualMatch = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase.rpc("check_mutual_match", {
+        friend_id: friend.id,
+      });
+
+      if (error) throw error;
+      setShowDiscord(data || false);
+    } catch (error) {
+      console.error("Error checking match:", error);
+    }
+  };
 
   const handleDragStart = (clientX: number, clientY: number) => {
     if (disabled) return;
@@ -123,9 +148,9 @@ const SwipeCard = ({ friend, onSwipe, disabled }: SwipeCardProps) => {
           <h2 className="text-4xl font-bold text-center mb-2 text-foreground">
             {friend.nickname}
           </h2>
-          {friend.discord_username && (
+          {friend.sex && (
             <p className="text-sm text-center text-muted-foreground mb-4">
-              Discord: {friend.discord_username}
+              {friend.sex.charAt(0).toUpperCase() + friend.sex.slice(1)}
             </p>
           )}
           <div className="h-1 w-20 bg-primary mx-auto rounded-full mb-6" />
@@ -140,6 +165,26 @@ const SwipeCard = ({ friend, onSwipe, disabled }: SwipeCardProps) => {
               {friend.useless_trait}
             </p>
           </div>
+
+          {showDiscord && friend.discord_username ? (
+            <div className="bg-success/10 p-4 rounded-xl border-2 border-success/20">
+              <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">
+                Discord (Mutual Match!)
+              </p>
+              <p className="text-lg font-semibold text-foreground">
+                {friend.discord_username}
+              </p>
+            </div>
+          ) : friend.discord_username ? (
+            <div className="bg-muted/30 p-4 rounded-xl border border-muted">
+              <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">
+                Discord
+              </p>
+              <p className="text-base text-muted-foreground blur-sm select-none">
+                Match to reveal
+              </p>
+            </div>
+          ) : null}
 
           {friend.interests && (
             <div className="bg-accent/10 p-4 rounded-xl border-2 border-accent/20">

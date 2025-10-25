@@ -24,6 +24,7 @@ export type Database = {
           keeps_count: number
           nickname: string
           photo_url: string | null
+          sex: string | null
           tagline: string
           useless_trait: string
           user_id: string | null
@@ -38,6 +39,7 @@ export type Database = {
           keeps_count?: number
           nickname: string
           photo_url?: string | null
+          sex?: string | null
           tagline: string
           useless_trait: string
           user_id?: string | null
@@ -52,6 +54,7 @@ export type Database = {
           keeps_count?: number
           nickname?: string
           photo_url?: string | null
+          sex?: string | null
           tagline?: string
           useless_trait?: string
           user_id?: string | null
@@ -77,11 +80,44 @@ export type Database = {
         }
         Relationships: []
       }
+      swipes: {
+        Row: {
+          created_at: string
+          friend_id: string
+          id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string
+          friend_id: string
+          id?: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string
+          friend_id?: string
+          id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swipes_friend_id_fkey"
+            columns: ["friend_id"]
+            isOneToOne: false
+            referencedRelation: "friends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      check_mutual_match: { Args: { friend_id: string }; Returns: boolean }
       vote_on_friend: {
         Args: { friend_id: string; vote_type: string }
         Returns: undefined

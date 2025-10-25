@@ -15,7 +15,7 @@ const Index = () => {
           <div className="flex justify-center mb-4">
             <Heart className="w-20 h-20 text-primary animate-pulse" />
           </div>
-          <CardTitle className="text-5xl font-bold mb-3">Friendder</CardTitle>
+          <CardTitle className="text-5xl font-bold mb-3">Frienderr</CardTitle>
           <CardDescription className="text-xl">
             Rate your friends. Share the chaos. Vote on who needs to touch grass.
           </CardDescription>
@@ -70,14 +70,26 @@ const Index = () => {
             </Button>
           </div>
 
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => navigate("/browse")}
-            className="w-full h-16 text-lg rounded-2xl border-2 border-primary hover:bg-primary/10 font-semibold"
-          >
-            Browse All Friends
-          </Button>
+          <div className="grid md:grid-cols-2 gap-4">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate("/matches")}
+              className="h-16 text-lg rounded-2xl border-2 border-primary hover:bg-primary/10 font-semibold"
+            >
+              <Heart className="mr-2 w-5 h-5" />
+              Your Matches
+            </Button>
+
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate("/browse")}
+              className="h-16 text-lg rounded-2xl border-2 border-primary hover:bg-primary/10 font-semibold"
+            >
+              Browse All Friends
+            </Button>
+          </div>
 
           <div className="bg-card/50 rounded-xl p-6 space-y-3">
             <h3 className="font-bold text-lg">How it works:</h3>
